@@ -306,6 +306,11 @@ class Settings(BaseSettings):
     # ==================== Server ====================
     host: str = "0.0.0.0"
     port: int = 8082
+    # When true, /admin is reachable from non-loopback clients (self-hosted VPS).
+    # Use only with firewall / VPN: admin can change API keys and model routing.
+    admin_allow_remote: bool = Field(
+        default=False, validation_alias="FCC_ADMIN_ALLOW_REMOTE"
+    )
     log_file: str = "logs/server.log"
     # Optional server API key to protect endpoints (Anthropic-style)
     # Set via env `ANTHROPIC_AUTH_TOKEN`. When empty, no auth is required.

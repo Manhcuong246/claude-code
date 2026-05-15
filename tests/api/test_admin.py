@@ -9,7 +9,7 @@ from fastapi.testclient import TestClient
 from api.admin_config import MASKED_SECRET
 from api.admin_urls import local_admin_url
 from api.app import create_app
-from config.settings import Settings
+from config.settings import Settings, get_settings
 
 
 def _local_client(app):
@@ -38,11 +38,32 @@ def _clear_process_config(monkeypatch) -> None:
 
 def test_admin_page_is_loopback_only(monkeypatch, tmp_path):
     _set_home(monkeypatch, tmp_path)
+    monkeypatch.delenv("FCC_ADMIN_ALLOW_REMOTE", raising=False)
+    get_settings.cache_clear()
     app = create_app(lifespan_enabled=False)
 
     assert _local_client(app).get("/admin").status_code == 200
     remote_client = TestClient(app, client=("203.0.113.10", 50000))
     assert remote_client.get("/admin").status_code == 403
+
+
+def test_admin_page_allows_remote_when_configured(monkeypatch, tmp_path):
+    _set_home(monkeypatch, tmp_path)
+    monkeypatch.setenv("FCC_ADMIN_ALLOW_REMOTE", "true")
+    get_settings.cache_clear()
+    try:
+        app = create_app(lifespan_enabled=False)
+        remote_client = TestClient(app, client=("203.0.113.10", 50000))
+        assert remote_client.get("/admin").status_code == 200
+        assert (
+            remote_client.get(
+                "/admin", headers={"Origin": "https://example.com"}
+            ).status_code
+            == 200
+        )
+    finally:
+        monkeypatch.delenv("FCC_ADMIN_ALLOW_REMOTE", raising=False)
+        get_settings.cache_clear()
 
 
 def test_admin_config_masks_secrets_and_exposes_manifest(monkeypatch, tmp_path):
