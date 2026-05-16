@@ -1,0 +1,29 @@
+# VPS: clone repo → edit .env (one key) → ./start.sh
+
+services:
+  proxy:
+    build: .
+    env_file:
+      - .env
+    environment:
+      HOME: /data
+    ports:
+      - "${PUBLIC_PORT:-8082}:8082"
+    volumes:
+      - fcc-data:/data
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8082/health', timeout=2)",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+volumes:
+  fcc-data:

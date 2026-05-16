@@ -18,4 +18,4 @@ tests
 llama_cache
 .smoke-results
 debug-*.log
-deploy/aws.env
+.env

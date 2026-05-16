@@ -1,2 +1,2 @@
-# Shell entrypoints must use LF for Docker (Linux).
-deploy/entrypoint.sh text eol=lf
+docker-entrypoint.sh text eol=lf
+start.sh text eol=lf
