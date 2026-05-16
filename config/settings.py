@@ -164,13 +164,18 @@ class Settings(BaseSettings):
     # ==================== Model ====================
     # All Claude model requests are mapped to this single model (fallback)
     # Format: provider_type/model/name
-    model: str = "nvidia_nim/z-ai/glm4.7"
+    # DeepSeek V4: https://api-docs.deepseek.com/ (legacy chat/reasoner → v4-flash only)
+    model: str = "deepseek/deepseek-v4-flash"
 
     # Per-model overrides (optional, falls back to MODEL)
     # Each can use a different provider
     model_opus: str | None = Field(default=None, validation_alias="MODEL_OPUS")
-    model_sonnet: str | None = Field(default="deepseek/deepseek-reasoner", validation_alias="MODEL_SONNET")
-    model_haiku: str | None = Field(default=None, validation_alias="MODEL_HAIKU")
+    model_sonnet: str | None = Field(
+        default="deepseek/deepseek-v4-pro", validation_alias="MODEL_SONNET"
+    )
+    model_haiku: str | None = Field(
+        default="deepseek/deepseek-v4-flash", validation_alias="MODEL_HAIKU"
+    )
 
     # ==================== Per-Provider Proxy ====================
     nvidia_nim_proxy: str = Field(default="", validation_alias="NVIDIA_NIM_PROXY")

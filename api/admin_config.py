@@ -282,7 +282,7 @@ FIELDS: tuple[ConfigFieldSpec, ...] = (
         "Default Model",
         "models",
         settings_attr="model",
-        default="nvidia_nim/z-ai/glm4.7",
+        default="deepseek/deepseek-v4-flash",
         description="Fallback provider/model route for all Claude model names.",
     ),
     ConfigFieldSpec(
@@ -297,6 +297,7 @@ FIELDS: tuple[ConfigFieldSpec, ...] = (
         "Sonnet Override",
         "models",
         settings_attr="model_sonnet",
+        default="deepseek/deepseek-v4-pro",
         description="Optional provider/model route for Sonnet requests.",
     ),
     ConfigFieldSpec(
@@ -304,6 +305,7 @@ FIELDS: tuple[ConfigFieldSpec, ...] = (
         "Haiku Override",
         "models",
         settings_attr="model_haiku",
+        default="deepseek/deepseek-v4-flash",
         description="Optional provider/model route for Haiku requests.",
     ),
     ConfigFieldSpec(

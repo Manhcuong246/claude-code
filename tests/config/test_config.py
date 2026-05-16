@@ -29,7 +29,7 @@ class TestSettings:
         monkeypatch.delenv("HTTP_CONNECT_TIMEOUT", raising=False)
         monkeypatch.setitem(Settings.model_config, "env_file", ())
         settings = Settings()
-        assert settings.model == "nvidia_nim/z-ai/glm4.7"
+        assert settings.model == "deepseek/deepseek-v4-flash"
         assert isinstance(settings.provider_rate_limit, int)
         assert isinstance(settings.provider_rate_window, int)
         assert isinstance(settings.nim.temperature, float)
@@ -468,14 +468,18 @@ class TestSettingsOptionalStr:
 class TestPerModelMapping:
     """Test per-model fields and resolve_model()."""
 
-    def test_model_fields_default_none(self):
-        """Per-model fields default to None."""
+    def test_model_fields_defaults(self, monkeypatch):
+        """Per-model fields default to DeepSeek tier routes."""
         from config.settings import Settings
 
+        for key in ("MODEL", "MODEL_OPUS", "MODEL_SONNET", "MODEL_HAIKU"):
+            monkeypatch.delenv(key, raising=False)
+        monkeypatch.setitem(Settings.model_config, "env_file", ())
         s = Settings()
+        assert s.model == "deepseek/deepseek-v4-flash"
         assert s.model_opus is None
-        assert s.model_sonnet is None
-        assert s.model_haiku is None
+        assert s.model_sonnet == "deepseek/deepseek-v4-pro"
+        assert s.model_haiku == "deepseek/deepseek-v4-flash"
 
     def test_model_opus_from_env(self, monkeypatch):
         """MODEL_OPUS env var is loaded."""
@@ -504,7 +508,7 @@ class TestPerModelMapping:
             (
                 {"MODEL": "nvidia_nim/meta/llama3-70b-instruct"},
                 "nvidia_nim/meta/llama3-70b-instruct",
-                None,
+                "deepseek/deepseek-v4-flash",
             ),
             (
                 {
@@ -514,11 +518,31 @@ class TestPerModelMapping:
                 "open_router/anthropic/claude-3-opus",
                 "open_router/anthropic/claude-3-haiku",
             ),
-            ({"MODEL": "deepseek/deepseek-chat"}, "deepseek/deepseek-chat", None),
-            ({"MODEL": "wafer/DeepSeek-V4-Pro"}, "wafer/DeepSeek-V4-Pro", None),
-            ({"MODEL": "lmstudio/qwen2.5-7b"}, "lmstudio/qwen2.5-7b", None),
-            ({"MODEL": "llamacpp/local-model"}, "llamacpp/local-model", None),
-            ({"MODEL": "ollama/llama3.1"}, "ollama/llama3.1", None),
+            (
+                {"MODEL": "deepseek/deepseek-v4-flash"},
+                "deepseek/deepseek-v4-flash",
+                "deepseek/deepseek-v4-flash",
+            ),
+            (
+                {"MODEL": "wafer/DeepSeek-V4-Pro"},
+                "wafer/DeepSeek-V4-Pro",
+                "deepseek/deepseek-v4-flash",
+            ),
+            (
+                {"MODEL": "lmstudio/qwen2.5-7b"},
+                "lmstudio/qwen2.5-7b",
+                "deepseek/deepseek-v4-flash",
+            ),
+            (
+                {"MODEL": "llamacpp/local-model"},
+                "llamacpp/local-model",
+                "deepseek/deepseek-v4-flash",
+            ),
+            (
+                {"MODEL": "ollama/llama3.1"},
+                "ollama/llama3.1",
+                "deepseek/deepseek-v4-flash",
+            ),
         ],
     )
     def test_settings_models_from_env(
@@ -616,12 +640,14 @@ class TestPerModelMapping:
         assert s.resolve_model("claude-haiku-4-20250514") == "lmstudio/qwen2.5-7b"
 
     def test_resolve_model_fallback_when_override_not_set(self):
-        """resolve_model falls back to MODEL when model override is None."""
+        """resolve_model falls back to MODEL when tier overrides are unset."""
         from config.settings import Settings
 
         s = Settings()
         s.model = "nvidia_nim/fallback-model"
-        # No model overrides set
+        s.model_opus = None
+        s.model_sonnet = None
+        s.model_haiku = None
         assert s.resolve_model("claude-opus-4-20250514") == "nvidia_nim/fallback-model"
         assert (
             s.resolve_model("claude-sonnet-4-20250514") == "nvidia_nim/fallback-model"
